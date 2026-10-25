@@ -6,43 +6,68 @@
 
             <!-- Kanban Board -->
             <div class="board-page__columns">
-                <BoardColumn title="Хийх ажлууд" :tasks="todoTasks" />
-                <BoardColumn title="Хийж буй" :tasks="inProgressTasks" />
-                <BoardColumn title="Дууссан" :tasks="doneTasks" />
+                <BoardColumn title="Хийх ажлууд" :tasks="todoTasks" @add="openModal('todo')"/>
+                <BoardColumn title="Хийж буй" :tasks="inProgressTasks" @add="openModal('in-progress')"/>
+                <BoardColumn title="Дууссан" :tasks="doneTasks" @add="openModal('done')"/>
             </div>
+
+            <TaskModal
+                v-if="showModal"
+                :start-status="modalStatus"
+                @close="closeModal"
+                @save="addTask"
+            />
     </div>
 </template>
 
 <script>
 import BoardColumn from '~/components/board/BoardColumn.vue';
+import TaskModal from '~/components/modal/TaskModal.vue';
 import TopBar from '~/components/navbar/TopBar.vue';
 export default { 
     name: 'IndexPage',
-    components: {TopBar, BoardColumn},
-    data(){
-        return {
-            tasks: [
-                { id: 1, title: 'Mobile app design', dueDate: '2026-10-20', priority: 'high', status: 'in-progress', owner: 'Зүнсод', sharedWith: ['Болд', 'Сараа'] },
-                { id: 2, title: 'Monitor revenue updates', dueDate: '2026-10-28', priority: 'medium', status: 'in-progress', owner: 'Зүнсод', sharedWith: [] },
-                { id: 3, title: 'Research website', dueDate: '2026-11-08', priority: 'medium', status: 'todo', owner: 'Зүнсод', sharedWith: [] },
-                { id: 4, title: 'Solar web-app design', dueDate: '2026-10-30', priority: 'high', status: 'todo', owner: 'Болд', sharedWith: ['Зүнсод'] },
-                { id: 5, title: 'Design system', dueDate: '2026-10-15', priority: 'low', status: 'done', owner: 'Болд', sharedWith: ['Зүнсод'] }
-            ]
+    components: {TopBar, BoardColumn, TaskModal},
+
+    data() {
+    return {
+        showModal: false,     // modal нээлттэй эсэх
+        modalStatus: 'todo'   // аль баганаас нээсэн
         }
     },
 
     computed:{
+        // store/tasks.js-ийн getter-үүдийг энэ component-ийн computed болгоно
         todoTasks(){
-            return this.tasks.filter((task)=> task.status === 'todo')
+            return this.$store.getters['tasks/todoTasks']
         },
-        inProgressTasks(){
-            return this.tasks.filter((task)=> task.status === 'in-progress')
+        inProgressTasks() {
+            return this.$store.getters['tasks/inProgressTasks']
         },
         doneTasks(){
-            return this.tasks.filter((task)=> task.status === 'done')
+            return this.$store.getters['tasks/doneTasks']
+        }
+    },
+
+    methods:{
+        openModal(status) {
+            this.modalStatus = status
+            this.showModal = true
+        },
+        closeModal() {
+            this.showModal = false
+        },
+
+        addTask(formData) {
+            const newTask = {
+                ...formData,
+                id: Date.now(),      // test
+                owner: 'Зөнсод',     // test
+                sharedWith: []
+            }
+            this.$store.commit('tasks/ADD_TASK', newTask)
+            this.closeModal()
         }
     }
-
 }
 </script>
 

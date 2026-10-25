@@ -52,8 +52,8 @@ export default {
         }
     }
     &__icon{
-        width: 12px;
-        height: 12px;
+        width: 18px;
+        height: 18px;
     }
 
     &__link{
