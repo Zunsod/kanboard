@@ -1,11 +1,10 @@
-body {
+html,
+body,
+#__nuxt,
+#__layout {
   height: 100%;
 }
 
 body {
-    font-family: $font-family;
-    font-size: $font-md;
-    color: $color-text;
-    background: $color-bg-page;
+  overflow: hidden;   
 }
-

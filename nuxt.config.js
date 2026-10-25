@@ -20,9 +20,12 @@ export default {
     ]
   },
 
-  css: ['~/assets/scss/main.scss'],
+  css: [
+  '@tabler/icons-webfont/dist/tabler-icons.min.css',
+  '~/assets/scss/main.scss'
+  ],
 
-  components: [{ path: '~/components', pathPrefix: false }],
+  components: false,
 
   buildModules: ['@nuxtjs/eslint-module', '@nuxtjs/style-resources'],
 

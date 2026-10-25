@@ -1,8 +1,6 @@
 <template>
     <div class="app">
-        <aside class="app__sidebar">
-            <span>Sidebar</span>
-        </aside>
+        <SideBar/>
         <main class="app__main">
             <Nuxt />
         </main>
@@ -10,13 +8,18 @@
 </template>
 
 <script>
-export default { name: 'DefaultLayout' }
+import SideBar from '~/components/navbar/SideBar.vue';
+export default { 
+    name: 'DefaultLayout',
+    components: {SideBar}
+}
 </script>
 
 <style lang="scss" scoped>
 .app{
     display: flex;
     height: 100vh;
+    background: $color-bg;
     &__sidebar{
         width: $sidebar-width;
         flex-shrink: 0;
