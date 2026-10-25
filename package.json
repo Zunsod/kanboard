@@ -13,13 +13,13 @@
     "lintfix": "prettier --write --list-different . && npm run lint:js -- --fix"
   },
   "dependencies": {
-    "@tabler/icons-webfont": "^3.49.0",
     "core-js": "^3.25.3",
     "firebase": "^13.1.0",
     "lucide-vue": "^0.517.0",
     "nuxt": "^2.15.8",
     "vue": "^2.7.10",
     "vue-server-renderer": "^2.7.10",
+    "vue-tabler-icons": "^1.14.0",
     "vue-template-compiler": "^2.7.10"
   },
   "devDependencies": {

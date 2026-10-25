@@ -20,12 +20,9 @@ export default {
     ]
   },
 
-  css: [
-  '@tabler/icons-webfont/dist/tabler-icons.min.css',
-  '~/assets/scss/main.scss'
-  ],
+  css: ['~/assets/scss/main.scss'],
 
-  components: false,
+  components: [{ path: '~/components', pathPrefix: false }],
 
   buildModules: ['@nuxtjs/eslint-module', '@nuxtjs/style-resources'],
 
@@ -35,6 +32,6 @@ export default {
   },
 
   build: {
-    transpile: ['firebase', '@firebase']
+    transpile: ['firebase', '@firebase', 'vue-tabler-icons']
   }
 }

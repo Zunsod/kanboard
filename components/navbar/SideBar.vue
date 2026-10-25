@@ -6,15 +6,19 @@
 
         <nav class="sidebar__nav" area-label="Үндсэн цэс">
             <NuxtLink to="/" class="sidebar__link" exact-active-class="is-active">
-                <TablerIcon name="layout-kanban" :size="20"/>
-                <span>Board</span>
+                <LayoutKanbanIcon class="sidebar__icon"/>
+                <span class="sidebar__nav__name">Board</span>
             </NuxtLink>
         </nav>
     </div>
 </template>
 
 <script>
-export default { name: 'SideBar'}
+import { LayoutKanbanIcon } from 'vue-tabler-icons';
+export default { 
+    name: 'SideBar',
+    components: {LayoutKanbanIcon}
+}
 </script>
 
 <style lang="scss" scoped>
@@ -42,6 +46,14 @@ export default { name: 'SideBar'}
         display: flex;
         flex-direction: column;
         margin-top: $space-4;
+
+        &__name{
+            margin-left: $space-2;
+        }
+    }
+    &__icon{
+        width: 12px;
+        height: 12px;
     }
 
     &__link{
@@ -56,5 +68,6 @@ export default { name: 'SideBar'}
             background: $color-hover;
         }
     }
+
 }
 </style>

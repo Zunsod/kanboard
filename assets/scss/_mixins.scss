@@ -4,3 +4,14 @@
   justify-content: center;
 }
 
+@mixin card {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+}
+
+@mixin badge-color($text, $bg) {
+  color: $text;
+  background: $bg;
+}
+
