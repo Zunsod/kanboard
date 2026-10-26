@@ -6,32 +6,48 @@
 
             <!-- Kanban Board -->
             <div class="board-page__columns">
-                <BoardColumn title="Хийх ажлууд" :tasks="todoTasks" @add="openModal('todo')"/>
-                <BoardColumn title="Хийж буй" :tasks="inProgressTasks" @add="openModal('in-progress')"/>
-                <BoardColumn title="Дууссан" :tasks="doneTasks" @add="openModal('done')"/>
+                <BoardColumn title="Хийх ажлууд" :tasks="todoTasks" @add="openModal('todo')" @open="openEdit"/>
+                <BoardColumn title="Хийж буй" :tasks="inProgressTasks" @add="openModal('in-progress')" @open="openEdit"/>
+                <BoardColumn title="Дууссан" :tasks="doneTasks" @add="openModal('done')" @open="openEdit"/>
             </div>
-
+            
+            <!-- Task uusgeh bolon zasah -->
             <TaskModal
                 v-if="showModal"
                 :start-status="modalStatus"
+                :task="editingTask"
+                :current-user="currentUser"
                 @close="closeModal"
-                @save="addTask"
+                @save="saveTask"
+                @delete="askDelete"
+            />
+
+            <!-- delete batalgaajuulalt -->
+            <ConfirmDialogue
+                v-if="deletingTask"
+                :task="deletingTask"
+                @cancel="deletingTask = null"
+                @confirm="confirmDelete"
             />
     </div>
 </template>
 
 <script>
 import BoardColumn from '~/components/board/BoardColumn.vue';
+import ConfirmDialogue from '~/components/modal/ConfirmDialogue.vue';
 import TaskModal from '~/components/modal/TaskModal.vue';
 import TopBar from '~/components/navbar/TopBar.vue';
 export default { 
     name: 'IndexPage',
-    components: {TopBar, BoardColumn, TaskModal},
+    components: {TopBar, BoardColumn, TaskModal, ConfirmDialogue},
 
     data() {
-    return {
-        showModal: false,     // modal нээлттэй эсэх
-        modalStatus: 'todo'   // аль баганаас нээсэн
+        return {
+            showModal: false,     // modal нээлттэй эсэх
+            currentUser: 'Зөнсод',
+            modalStatus: 'todo',   // аль баганаас нээсэн
+            editingTask: null, // засаж буй task (null бол шинэ)
+            deletingTask: null // устгах гэж буй task (null бол dialog хаалттай)
         }
     },
 
@@ -53,19 +69,42 @@ export default {
             this.modalStatus = status
             this.showModal = true
         },
+        // card harah, zasah
+        openEdit(task) {
+            this.editingTask = task
+            this.showModal = true
+        },
+
         closeModal() {
             this.showModal = false
         },
 
-        addTask(formData) {
-            const newTask = {
-                ...formData,
-                id: Date.now(),      // test
-                owner: 'Зөнсод',     // test
-                sharedWith: []
+        saveTask(formData) {
+            if(this.editingTask){
+                const updatedTask = {...this.editingTask, ...formData}
+                this.$store.commit('tasks/UPDATE_TASK', updatedTask)
+            }else{
+                const newTask = {
+                    ...formData,
+                    id: Date.now(),      // test
+                    owner: this.currentUser,     // test
+                    sharedWith: []
+                }
+                this.$store.commit('tasks/ADD_TASK', newTask)
             }
-            this.$store.commit('tasks/ADD_TASK', newTask)
             this.closeModal()
+        },
+
+        // drawer хааж, dialog нээнэ
+        askDelete(task) {
+            this.closeModal()
+            this.deletingTask = task
+        },
+
+        // dialog-iin ustgah 
+        confirmDelete() {
+            this.$store.commit('tasks/DELETE_TASK', this.deletingTask.id)
+            this.deletingTask = null
         }
     }
 }

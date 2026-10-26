@@ -12,7 +12,12 @@
 
         <!-- Task card-ууд -->
         <div class="column__list">
-            <TaskCard v-for="task in tasks" :key="task.id" :task="task"/>
+            <TaskCard
+                v-for="task in tasks"
+                :key="task.id"
+                :task="task"
+                @open="$emit('open', task)"
+            />
             <p v-if="isEmpty" class="column__empty">Task байхгүй байна</p>
         </div>
     </section>

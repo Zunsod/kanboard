@@ -1,11 +1,11 @@
 // Ugugdul
 export const state = () => ({
   items: [
-    { id: 1, title: 'Mobile app design', dueDate: '2026-10-20', priority: 'high', status: 'in-progress', owner: 'Зүнсод', sharedWith: ['Болд', 'Сараа'] },
-    { id: 2, title: 'Monitor revenue updates', dueDate: '2026-10-28', priority: 'medium', status: 'in-progress', owner: 'Зүнсод', sharedWith: [] },
-    { id: 3, title: 'Research website', dueDate: '2026-11-08', priority: 'medium', status: 'todo', owner: 'Зүнсод', sharedWith: [] },
-    { id: 4, title: 'Solar web-app design', dueDate: '2026-10-30', priority: 'high', status: 'todo', owner: 'Болд', sharedWith: ['Зүнсод'] },
-    { id: 5, title: 'Design system', dueDate: '2026-10-15', priority: 'low', status: 'done', owner: 'Болд', sharedWith: ['Зүнсод'] }
+    { id: 1, title: 'Mobile app design', dueDate: '2026-10-20', priority: 'high', status: 'in-progress', owner: 'Зөнсод', sharedWith: ['Болд', 'Сараа'] },
+    { id: 2, title: 'Monitor revenue updates', dueDate: '2026-10-28', priority: 'medium', status: 'in-progress', owner: 'Зөнсод', sharedWith: [] },
+    { id: 3, title: 'Research website', dueDate: '2026-11-08', priority: 'medium', status: 'todo', owner: 'Зөнсод', sharedWith: [] },
+    { id: 4, title: 'Solar web-app design', dueDate: '2026-10-30', priority: 'high', status: 'todo', owner: 'Болд', sharedWith: ['Зөнсод'] },
+    { id: 5, title: 'Design system', dueDate: '2026-10-15', priority: 'low', status: 'done', owner: 'Болд', sharedWith: ['Зөнсод'] }
   ]
 })
 

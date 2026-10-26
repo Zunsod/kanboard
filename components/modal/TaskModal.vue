@@ -3,13 +3,21 @@
         <div class="drawer">
             <!-- Header хэсэг -->
             <header class="drawer__header">
-                <h2 class="drawer__title">Шинэ task</h2>
-                <button class="drawer__close" type="button" aria-label="Хаах" @click="$emit('close')">
-                    <XIcon class="drawer__close-icon" />
-                </button>
+                <div class="drawer__heading">
+                    <h2 class="drawer__title">{{ isEditing ? 'Task-н дэлгэрэнгүй' : 'Шинэ task'}}</h2>
+                    <button class="drawer__close" type="button" aria-label="Хаах" @click="$emit('close')">
+                        <XIcon class="drawer__close-icon" />
+                    </button>
+                </div>
+                <p v-if="!isEditing" class="drawer__hint">Санамж: * тэмдэгтэй талбарыг заавал бөглөнө.</p>
             </header>
-            <p class="drawer__hint">Санамж: * тэмдэгтэй талбарыг заавал бөглөнө.</p>
             
+            <!-- Shared task-ийг member нээсэн үед -->
+            <div v-if="isEditing && !isOwner" class="drawer__note">
+                <strong>Танд хуваалцсан · Засах боломжтой</strong>
+                <span>{{ task.owner }} энэ task-ийн эзэмшигч бөгөөд таны өөрчлөлт хоёуланд харагдана.</span>
+            </div>
+
             <!-- Form бөглөх хэсэг -->
             <form class="drawer__form" @submit.prevent="save">
                 <!-- гарчиг -->
@@ -64,15 +72,54 @@
                 </label>
                 </div>
 
-                <!-- share hiih talaar note -->
-                <div class="drawer__note">
+                <!-- Shine task үүсгэх үеийн note -->
+                <div v-if="!isEditing" class="drawer__note">
                     <strong>Зөвхөн танд харагдана</strong>
                     <span>Та энэ task-н эзэмшигч болох ба үүсгэсний дараа бусадтай хуваалцах боломжтой.</span>
                 </div>
+
+                <!-- hamtragchdiig zasah uyd -->
+                 <section v-if="isEditing" class="people">
+                    <h3 class="people__title">Эзэмшигч ба хамтрагчид</h3>
+
+                    <ul class="people__list">
+                        <li class="people__item">
+                            <UserAvatar :name="task.owner" size="sm" />
+                            <span class="people__name">{{ displayName(task.owner) }}</span>
+                            <span class="people__role">Owner · Editor</span>
+                        </li>
+                        <li v-for="person in task.sharedWith" :key="person" class="people__item">
+                            <UserAvatar :name="person" size="sm" />
+                            <span class="people__name">{{ displayName(person) }}</span>
+                            <span class="people__role">Editor</span>
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- Share, delete (edit hiih uyd) -->
+                <div v-if="isEditing" class="owner-actions">
+                    <div class="owner-actions__item">
+                        <button class="btn btn--ghost" type="button" disabled>
+                            Хуваалцах
+                        </button>
+                        <span class="owner-actions__hint">Owner manages access</span>
+                    </div>
+
+                    <div v-if="isOwner" class="owner-actions__item owner-actions__item--right">
+                            <button class="btn btn--danger" type="button" :disabled="!isOwner" @click="$emit('delete', task)">
+                                Устгах
+                            </button>
+                            <span class="owner-actions__hint">Owner only</span>
+                    </div>
+                </div>
+
+
                 <!-- cancel, create button-гууд -->
                 <div class="drawer__actions">
                     <button class="btn btn--ghost" type="button" @click="$emit('close')">Болих</button>
-                    <button class="btn btn--primary" type="submit" :disabled="!isValid">Үүсгэх</button>
+                    <button class="btn btn--primary" type="submit" :disabled="!isValid">
+                        {{ isEditing ? 'Хадгалах' : 'Үүсгэх' }}
+                    </button>
                 </div>
 
             </form>
@@ -82,15 +129,31 @@
 
 <script>
 import { XIcon } from 'vue-tabler-icons'
-
+import UserAvatar from '../ui/UserAvatar.vue';
 export default{
     name: 'TaskModal',
-    components: {XIcon},
+    components: {XIcon, UserAvatar},
     props: {
-        startStatus: { type: String, default: 'todo' }
+        startStatus: { type: String, default: 'todo' },
+        task: { type: Object, default: null },  // null irvel shine task
+        currentUser: { type: String, default: 'Зөнсод' } // test
     },
 
     data() {
+        // Herev taskiig zasaj baival
+        if(this.task){
+            return {
+                form: {
+                title: this.task.title,
+                description: this.task.description || '',
+                dueDate: this.task.dueDate,
+                priority: this.task.priority,
+                status: this.task.status
+                },
+                titleTouched: false
+            }
+        }
+        // Herev shineer task uusgevel
         return {
         form: {
             title: '',
@@ -103,6 +166,14 @@ export default{
         }
     },
     computed: {
+        isEditing(){
+            return this.task !== null
+        },
+        // Tuhain hereglegch task owner mun eseh
+        isOwner(){
+            return this.isEditing && this.task.owner === this.currentUser;
+        },
+
         // Гарчиг, огноо хоёулаа бөглөгдсөн үед л үүсгэж болно
         isValid() {
             return this.form.title.trim() !== '' && this.form.dueDate !== ''
@@ -117,6 +188,13 @@ export default{
         save() {
         if (!this.isValid) return
         this.$emit('save', { ...this.form })
+        },
+
+        displayName(name){
+            if(name === this.userName){
+                return `${name} (та)`
+            }
+            return name
         }
     }
 }
@@ -137,7 +215,7 @@ export default{
     bottom: 0;
     display: flex;
     flex-direction: column;
-    gap: $space-1;
+    gap: $space-2;
     width: 100%;
     max-width: 520px;
     padding: $space-5;
@@ -147,10 +225,19 @@ export default{
     animation: slide-in 0.2s ease-out;
     
     &__header {
+        display: flex;  
+        flex-direction: column;
+        align-items: flex-start;
+        
+    }
+    &__heading{
+        @include flex-center;
+        height: 3rem;
+        width: 100%;
         display: flex;
-        align-items: center;
         justify-content: space-between;
     }
+
     &__title {
         font-size: $font-xl;
         font-weight: 600;
@@ -160,6 +247,7 @@ export default{
         @include flex-center;
         width: 32px;
         height: 32px;
+        flex-shrink: 0;
         color: $color-text-muted;
         border-radius: $radius-md;
 
@@ -214,6 +302,7 @@ export default{
         gap: $space-2;
         padding-top: $space-4;
         border-top: 1px solid $color-border;
+        
     }
 }
 
@@ -225,10 +314,69 @@ export default{
     transform: translateX(0);
   }
 }
+
+.people{
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+
+    &__title {
+        font-size: $font-xs;
+        font-weight: 600;
+        color: $color-text-muted;
+        text-transform: uppercase;
+    }
+    &__list {
+        display: flex;
+        flex-direction: column;
+        gap: $space-2;
+        padding: 0;       
+        margin: 0;        
+        list-style: none; 
+    }
+    &__item {
+        display: flex;
+        align-items: center;
+        gap: $space-2;
+    }
+    &__name {
+        flex: 1; // name үлдсэн зайг эзэлж, role-г баруун тийш шахна
+        font-weight: 500;
+    }
+    &__role {
+        font-size: $font-xs;
+        color: $color-text-muted;
+    }
+}
+
+.owner-actions{
+    display: flex;
+    justify-content: space-between;
+    padding-top: $space-4;
+    border-top: 1px solid $color-border;
+    &__item {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: $space-1;
+
+        &--right {
+            align-items: flex-end;
+        }
+        &__hint {
+            font-size: $font-xs;
+            color: $color-text-subtle;
+        }
+    }
+    &__hint {
+        font-size: $font-xs;
+        color: $color-text-subtle;
+    }
+}
 .field {
   display: flex;
   flex-direction: column;
-  gap: $space-1;
+  gap: $space-2;
 
   &__label {
     font-size: $font-sm;
@@ -264,6 +412,12 @@ export default{
     font-weight: 500;
     border-radius: $radius-md;
 
+    // Idewhgui buh tovch
+    &:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
     &--ghost {
         border: 1px solid $color-border;
 
@@ -279,12 +433,13 @@ export default{
         &:hover {
         background: $color-primary-hover;
         }
+    }
+    &--danger {
+        color: $color-danger;
+        border: 1px solid $color-danger;
 
-        // Huchingui uyd budeg haragdana
-        &:disabled {
-        color: $color-text-subtle;
-        cursor: not-allowed;
-        background: $color-hover;
+        &:hover:not(:disabled) {
+            background: $high-bg;
         }
     }
 }

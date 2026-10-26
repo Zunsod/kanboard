@@ -1,5 +1,5 @@
 <template>
-    <div class="task-card">
+    <div class="task-card" @click="$emit('open')">
         <h3 class="task-card__title">{{ task.title }}</h3>
 
         <!-- priority haruulah -->
@@ -66,13 +66,14 @@ export default {
     }
 }
 </script>
-<styles lang="scss" scoped>
+<style lang="scss" scoped>
 .task-card{
     @include card;
     display: flex;
     flex-direction: column;
     gap: $space-3;
     padding: $space-3;
+    cursor: pointer;
 
     &:hover {
         box-shadow: $shadow-pop;
@@ -101,4 +102,4 @@ export default {
         height: 12px;
     }
 } 
-</styles>
+</style>
