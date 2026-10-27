@@ -1,6 +1,8 @@
 <template>
     <div class="task-card" @click="$emit('open')">
         <h3 class="task-card__title">{{ task.title }}</h3>
+        <!-- description haruulah -->
+        <p v-if="task.description" class="task-card__description">{{ task.description }}</p>
 
         <!-- priority haruulah -->
         <div class="task-card__priority">
@@ -81,6 +83,14 @@ export default {
     &__title {
         font-size: $font-md;
         font-weight: 600;
+    }
+    &__description {
+        display: -webkit-box;
+        overflow: hidden;
+        font-size: $font-sm;
+        color: $color-text-muted;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
     }
     &__priority{
         display: flex;
