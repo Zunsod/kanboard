@@ -1,8 +1,17 @@
 <template>
     <div class="board-page">
             <TopBar/>
-            <!-- Шүүлт, order хийх хэсэг -->
-            <div></div>
+
+            <!-- Tab, search, erembelelt хийх хэсэг -->
+            <BoardToolbar
+                :active-tab="activeTab"
+                :search="search"
+                :sort-by="sortBy"
+                @change-tab="activeTab = $event"
+                @search="search = $event"
+                @sort="sortBy = $event"
+                @add="openModal('todo')"
+            />
 
             <!-- Kanban Board -->
             <div class="board-page__columns">
@@ -34,12 +43,13 @@
 
 <script>
 import BoardColumn from '~/components/board/BoardColumn.vue';
+import BoardToolbar from '~/components/board/BoardToolbar.vue';
 import ConfirmDialogue from '~/components/modal/ConfirmDialogue.vue';
 import TaskModal from '~/components/modal/TaskModal.vue';
 import TopBar from '~/components/navbar/TopBar.vue';
 export default { 
     name: 'IndexPage',
-    components: {TopBar, BoardColumn, TaskModal, ConfirmDialogue},
+    components: {TopBar, BoardColumn, TaskModal, ConfirmDialogue, BoardToolbar},
 
     data() {
         return {
@@ -47,20 +57,50 @@ export default {
             currentUser: 'Зөнсод',
             modalStatus: 'todo',   // аль баганаас нээсэн
             editingTask: null, // засаж буй task (null бол шинэ)
-            deletingTask: null // устгах гэж буй task (null бол dialog хаалттай)
+            deletingTask: null, // устгах гэж буй task (null бол dialog хаалттай)
+            activeTab: 'all',
+            search: '',
+            sortBy: 'dueDate'
         }
     },
 
     computed:{
+        visibleTasks(){
+            let list = this.$store.state.tasks.items
+            // Tab
+            if(this.activeTab === 'mine'){
+                list = list.filter((task)=> task.owner === this.currentUser)
+            }
+            if(this.activeTab === 'shared'){
+                list = list.filter((task)=> task.owner !== this.currentUser)
+            }
+
+            // Search
+            const searchText = this.search.trim().toLowerCase()
+            if( searchText !==''){
+                list = list.filter((task)=> task.title.toLowerCase().includes(searchText))
+            }
+
+            // Erembe
+            const sorted = [...list]
+            if(this.sortBy === 'dueDate'){
+                sorted.sort((taskA, taskB) => taskA.dueDate.localeCompare(taskB.dueDate))
+            }
+            if(this.sortBy === 'priority'){
+                const order = { high: 1, medium: 2, low: 3 }
+                sorted.sort((taskA, taskB) => order[taskA.priority] - order[taskB.priority])
+            }
+            return sorted
+        },
         // store/tasks.js-ийн getter-үүдийг энэ component-ийн computed болгоно
         todoTasks(){
-            return this.$store.getters['tasks/todoTasks']
+            return this.visibleTasks.filter((task)=> task.status === 'todo')
         },
         inProgressTasks() {
-            return this.$store.getters['tasks/inProgressTasks']
+            return this.visibleTasks.filter((task)=> task.status === 'inProgress')
         },
         doneTasks(){
-            return this.$store.getters['tasks/doneTasks']
+            return this.visibleTasks.filter((task)=> task.status === 'done')
         }
     },
 
