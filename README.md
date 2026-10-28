@@ -1,68 +1,142 @@
-# kanboard
+# Kanboard
 
-## Build Setup
+A web-based Kanban task management app built with **Nuxt 2** and **Firebase**.
+Users can sign up, manage their tasks on a board, sort them, get reminders for upcoming deadlines, and share tasks with other users.
 
-```bash
-# install dependencies
-$ npm install
+🔗 **Live demo:** https://kanboard-zunsod.netlify.app
+📦 **Repository:** https://github.com/Zunsod/kanboard
 
-# serve with hot reload at localhost:3000
-$ npm run dev
+---
 
-# build for production and launch server
-$ npm run build
-$ npm run start
+## Demo accounts
 
-# generate static project
-$ npm run generate
+Two pre-filled accounts with shared tasks, so the sharing features can be tested:
+
+| Name       | Email                   | Password   |
+| ---------- | ----------------------- | ---------- |
+| Бям Зөнсод | `zunsod.tech@gmail.com` | `Zunsod12` |
+| Tugs       | `tugs@gmail.com`        | `Tugs1234` |
+
+open the second account in a private/incognito window to see real-time updates between users.
+
+---
+
+## Features
+
+### ✅ Assignment requirements
+
+| Requirement             | Implementation                                                                                                                                                  |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **User Authentication** | Email/password sign-up and log-in with Firebase Auth. Password rules, route guard for logged-out users                                                          |
+| **Task Management**     | Create, read, update and delete tasks. Each task has a title, description, due date, priority and status (To Do / In Progress / Done)                           |
+| **Task Sorting**        | Sort by due date or priority. Completion status is represented by the board columns                                                                             |
+| **Task Reminders**      | On log-in, toast notifications show overdue tasks, tasks due today or tomorrow, and newly shared tasks. A notification bell keeps the list available afterwards |
+| **Task Sharing**        | The owner shares a task by email. Shared tasks are visible and editable by both the owner and the recipient, and changes sync in real time                      |
+
+### Also
+
+- Drag & drop between columns
+- Tabs: **All / My tasks / Shared with me** and search by title
+- Real-time sync with Firestore listeners
+- Firestore **Security Rules** enforce permissions on the server side
+- Delete confirmation dialog and toast feedback for every action
+
+---
+
+## Tech stack
+
+|             |                                          |
+| ----------- | ---------------------------------------- |
+| Framework   | Nuxt 2 (Vue 2)                           |
+| State       | Vuex                                     |
+| Backend     | Firebase Authentication, Cloud Firestore |
+| Styling     | SCSS                                     |
+| Icons       | `vue-tabler-icons`                       |
+| Drag & drop | `vuedraggable@2`                         |
+| Hosting     | Netlify                                  |
+
+---
+
+## Permissions
+
+Permissions are enforced by Firestore Security Rules.
+
+| Action                                              | Owner | Shared user |
+| --------------------------------------------------- | ----- | ----------- |
+| View task                                           | ✅    | ✅          |
+| Edit title, description, due date, priority, status | ✅    | ✅          |
+| Share / unshare                                     | ✅    | ❌          |
+| Delete                                              | ✅    | ❌          |
+
+---
+
+## Data model
+
+```
+users/{uid}
+  email: string
+  displayName: string
+
+tasks/{taskId}
+  title: string
+  description: string
+  dueDate: string          // "YYYY-MM-DD"
+  priority: "high" | "medium" | "low"
+  status: "todo" | "in-progress" | "done"
+  ownerId: string          // uid of the owner
+  ownerName: string
+  sharedWith: string[]     // uids, used for queries and security rules
+  sharedUsers: { uid, name }[]  // for displaying avatars
+  createdAt: timestamp
 ```
 
-For detailed explanation on how things work, check out the [documentation](https://nuxtjs.org).
+---
 
-## Special Directories
+## Project structure
 
-You can create the following extra directories, some of which have special behaviors. Only `pages` is required; you can delete them if you don't want to use their functionality.
+```
+assets/scss/         Variables, mixins, global and auth styles
+components/
+  board/             BoardColumn, BoardToolbar, TaskCard
+  modal/             TaskModal (create / edit / share), ConfirmDialog
+  navbar/            SideBar, TopBar (notification bell)
+  ui/                UiBadge, UserAvatar, ToastContainer
+layouts/             default (sidebar), auth (login / sign-up)
+middleware/auth.js   Redirects logged-out users to /login
+pages/               index (board), login, signup
+services/            Firebase setup, auth error messages
+store/               auth, tasks (Firestore), toast
+utils/date.js        Due date helpers
+```
 
-### `assets`
+---
 
-The assets directory contains your uncompiled assets such as Stylus or Sass files, images, or fonts.
+## Running locally
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/assets).
+**Requirements:** Node.js 20 (see `.nvmrc`)
 
-### `components`
+```bash
+git clone https://github.com/Zunsod/kanboard.git
+cd kanboard
+npm install
+```
 
-The components directory contains your Vue.js components. Components make up the different parts of your page and can be reused and imported into your pages, layouts and even other components.
+Create a `.env` file in the project root with your Firebase web app config:
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/components).
+```
+FIREBASE_API_KEY=
+FIREBASE_AUTH_DOMAIN=
+FIREBASE_PROJECT_ID=
+FIREBASE_STORAGE_BUCKET=
+FIREBASE_MESSAGING_SENDER_ID=
+FIREBASE_APP_ID=
+```
 
-### `layouts`
+Then:
 
-Layouts are a great help when you want to change the look and feel of your Nuxt app, whether you want to include a sidebar or have distinct layouts for mobile and desktop.
+```bash
+npm run dev        # http://localhost:3000
+npm run generate   # static build into dist/
+```
 
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/layouts).
-
-### `pages`
-
-This directory contains your application views and routes. Nuxt will read all the `*.vue` files inside this directory and setup Vue Router automatically.
-
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/get-started/routing).
-
-### `plugins`
-
-The plugins directory contains JavaScript plugins that you want to run before instantiating the root Vue.js Application. This is the place to add Vue plugins and to inject functions or constants. Every time you need to use `Vue.use()`, you should create a file in `plugins/` and add its path to plugins in `nuxt.config.js`.
-
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/plugins).
-
-### `static`
-
-This directory contains your static files. Each file inside this directory is mapped to `/`.
-
-Example: `/static/robots.txt` is mapped as `/robots.txt`.
-
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/static).
-
-### `store`
-
-This directory contains your Vuex store files. Creating a file in this directory automatically activates Vuex.
-
-More information about the usage of this directory in [the documentation](https://nuxtjs.org/docs/2.x/directory-structure/store).
+---
