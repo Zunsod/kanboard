@@ -42,7 +42,6 @@
 </template>
 
 <script>
-import { auth, db } from '~/services/firebase';
 import BoardColumn from '~/components/board/BoardColumn.vue';
 import BoardToolbar from '~/components/board/BoardToolbar.vue';
 import ConfirmDialogue from '~/components/modal/ConfirmDialogue.vue';

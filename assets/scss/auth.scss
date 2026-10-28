@@ -87,5 +87,12 @@
       border-color: $color-info;
       outline: none;
     }
+    &--error {
+      border-color: $color-danger;
+    }
+  }
+  &__error {
+    font-size: 11px;
+    color: $color-danger;
   }
 }

@@ -110,6 +110,11 @@ export default {
                     password: this.password
                 })
                 this.$router.push('/')
+                // toast message
+                this.$store.dispatch('toast/show', {
+                    message: 'Бүртгэл амжилттай үүслээ. Welcome :)',
+                    type: 'success'
+                })
             } catch(err) {
                 this.error = authErrorMessage(err.code)
             } finally {

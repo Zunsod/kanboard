@@ -4,14 +4,16 @@
         <main class="app__main">
             <Nuxt />
         </main>
+        <ToastMessage/>
     </div>
 </template>
 
 <script>
 import SideBar from '~/components/navbar/SideBar.vue';
+import ToastMessage from '~/components/ui/ToastMessage.vue';
 export default { 
     name: 'DefaultLayout',
-    components: {SideBar}
+    components: {SideBar, ToastMessage}
 }
 </script>
 
