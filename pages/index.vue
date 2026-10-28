@@ -14,9 +14,9 @@
 
             <!-- Kanban Board -->
             <div class="board-page__columns">
-                <BoardColumn title="Хийх ажлууд" :tasks="todoTasks" @add="openModal('todo')" @open="openEdit"/>
-                <BoardColumn title="Хийж буй" :tasks="inProgressTasks" @add="openModal('in-progress')" @open="openEdit"/>
-                <BoardColumn title="Дууссан" :tasks="doneTasks" @add="openModal('done')" @open="openEdit"/>
+                <BoardColumn title="Хийх ажлууд" :tasks="todoTasks" @add="openModal('todo')" @open="openEdit" @move="moveTask($event, 'todo')" />
+                <BoardColumn title="Хийж буй" :tasks="inProgressTasks" @add="openModal('in-progress')" @open="openEdit" @move="moveTask($event, 'in-progress')"/>
+                <BoardColumn title="Дууссан" :tasks="doneTasks" @add="openModal('done')" @open="openEdit" @move="moveTask($event, 'done')"/>
             </div>
             
             <!-- Task uusgeh bolon zasah -->
@@ -210,6 +210,17 @@ export default {
                 type: 'info',
                 duration: 6000
                 })
+            }
+        },
+        async moveTask(id, status) {
+            const task = this.$store.getters['tasks/allTasks'].find((t) => t.id === id)
+            if (!task || task.status === status) return
+
+            try {
+                await this.$store.dispatch('tasks/updateTask', { id, status })
+            } catch (err) {
+                console.error(err)
+                this.showToast('Зөөж чадсангүй.', 'error')
             }
         },
     },

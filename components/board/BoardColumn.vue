@@ -12,7 +12,15 @@
         </header>
 
         <!-- Task card-ууд -->
-        <div class="column__list">
+        <draggable
+            class="column__list"
+            :value="tasks"
+            group="tasks"
+            :sort="false"
+            :animation="150"
+            ghost-class="column__ghost"
+            @change="onChange"
+        >
             <TaskCard
                 v-for="task in tasks"
                 :key="task.id"
@@ -20,17 +28,18 @@
                 @open="$emit('open', task)"
             />
             <p v-if="isEmpty" class="column__empty">Task байхгүй байна</p>
-        </div>
+        </draggable>
     </section>
 </template>
 
 <script>
 import { PlusIcon } from 'vue-tabler-icons';
+import draggable from 'vuedraggable';
 import TaskCard from './TaskCard.vue';
 
 export default{
     name: 'BoardColumn',
-    components: {PlusIcon, TaskCard},
+    components: {PlusIcon, TaskCard, draggable},
     props:{
         title: { type: String, required: true },
         tasks: { type: Array, default: () => [] }
@@ -39,6 +48,14 @@ export default{
     computed: {
         isEmpty() {
             return this.tasks.length === 0
+        }
+    },
+    methods: {
+        // Uur baganaas card orj ireh uyd
+        onChange(event) {
+        if (event.added) {
+            this.$emit('move', event.added.element.id)
+        }
         }
     }
 }
@@ -55,6 +72,18 @@ export default{
         padding-bottom: $space-3;
         margin-bottom: $space-3;
         border-bottom: 3px solid $color-column-line;
+    }
+    &__list {
+        display: flex;
+        flex-direction: column;
+        gap: $space-3;
+        min-height: 120px; // хоосон баганад ч тавих зай байна
+    }
+
+    // Чирж байх үед "тавих байр"
+    &__ghost {
+        opacity: 0.4;
+        border: 2px dashed $color-column-line;
     }
 
     &__title {
