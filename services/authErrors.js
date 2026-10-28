@@ -1,4 +1,4 @@
-export function authErrorMessages(code){
+export function authErrorMessage(code){
     if(code === 'auth/email-already-in-use') return 'Энэ имэйлээр аль хэдийн бүртгүүлсэн байна.'
     if(code === 'auth/auth/invalid-email') return 'Имэйл хаягаа зөв оруулна уу.'
     if (code === 'auth/weak-password') return 'Нууц үг хамгийн багадаа 6 тэмдэгт байх ёстой.'

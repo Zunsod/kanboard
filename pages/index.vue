@@ -1,7 +1,6 @@
 <template>
     <div class="board-page">
-            <TopBar/>
-
+            <TopBar title="Бүх даалгаврууд"/>
             <!-- Tab, search, erembelelt хийх хэсэг -->
             <BoardToolbar
                 :active-tab="activeTab"
@@ -25,7 +24,7 @@
                 v-if="showModal"
                 :start-status="modalStatus"
                 :task="editingTask"
-                :current-user="currentUser"
+                :current-user-id="userId"
                 @close="closeModal"
                 @save="saveTask"
                 @delete="askDelete"
@@ -42,6 +41,7 @@
 </template>
 
 <script>
+import { type } from 'firebase/firestore/lite/pipelines';
 import BoardColumn from '~/components/board/BoardColumn.vue';
 import BoardToolbar from '~/components/board/BoardToolbar.vue';
 import ConfirmDialogue from '~/components/modal/ConfirmDialogue.vue';
@@ -54,7 +54,6 @@ export default {
     data() {
         return {
             showModal: false,     // modal нээлттэй эсэх
-            currentUser: 'Зөнсод',
             modalStatus: 'todo',   // аль баганаас нээсэн
             editingTask: null, // засаж буй task (null бол шинэ)
             deletingTask: null, // устгах гэж буй task (null бол dialog хаалттай)
@@ -65,14 +64,17 @@ export default {
     },
 
     computed:{
+        userId(){
+            return this.$store.state.auth.user.uid
+        },
         visibleTasks(){
-            let list = this.$store.state.tasks.items
+            let list = this.$store.getters['tasks/allTasks']
             // Tab
             if(this.activeTab === 'mine'){
-                list = list.filter((task)=> task.owner === this.currentUser)
+                list = list.filter((task)=> task.ownerId === this.userId)
             }
             if(this.activeTab === 'shared'){
-                list = list.filter((task)=> task.owner !== this.currentUser)
+                list = list.filter((task)=> task.ownerId !== this.userId)
             }
 
             // Search
@@ -103,9 +105,18 @@ export default {
             return this.visibleTasks.filter((task)=> task.status === 'done')
         }
     },
+    // Board neegdehed firestore-iig sonsoj ehelne
+    mounted(){
+        this.$store.dispatch('tasks/subscribe')
+    },
+    // board-s garahad sonsohoo bolino
+    beforeDestroy(){
+        this.$store.dispatch('tasks/unsubscribe')
+    },
 
     methods:{
         openModal(status) {
+            this.editingTask = null
             this.modalStatus = status
             this.showModal = true
         },
@@ -117,22 +128,26 @@ export default {
 
         closeModal() {
             this.showModal = false
+            this.editingTask = null
         },
 
-        saveTask(formData) {
-            if(this.editingTask){
-                const updatedTask = {...this.editingTask, ...formData}
-                this.$store.commit('tasks/UPDATE_TASK', updatedTask)
-            }else{
-                const newTask = {
-                    ...formData,
-                    id: Date.now(),      // test
-                    owner: this.currentUser,     // test
-                    sharedWith: []
-                }
-                this.$store.commit('tasks/ADD_TASK', newTask)
+        async saveTask(formData) {
+        try {
+            if (this.editingTask) {
+            await this.$store.dispatch('tasks/updateTask', {
+                id: this.editingTask.id,
+                ...formData
+            })
+            this.showToast('Task хадгалагдлаа', 'success')
+            } else {
+            await this.$store.dispatch('tasks/addTask', formData)
+            this.showToast('Шинэ task үүслээ', 'success')
             }
             this.closeModal()
+        } catch (err) {
+            console.error(err)
+            this.showToast('Хадгалж чадсангүй. Дахин оролдоно уу.', 'error')
+        }
         },
 
         // drawer хааж, dialog нээнэ
@@ -142,9 +157,18 @@ export default {
         },
 
         // dialog-iin ustgah 
-        confirmDelete() {
-            this.$store.commit('tasks/DELETE_TASK', this.deletingTask.id)
+        async confirmDelete() {
+            try{
+                await this.$store.dispatch('tasks/deleteTask', this.deletingTask.id)
+                this.showToast('Task устгагдлаа', 'info')
+            } catch (err){
+                console.error(err)
+                this.showToast('Устгаж чадсангүй.', 'error')
+            }
             this.deletingTask = null
+        },
+        showToast(message){
+            this.$store.dispatch('toast/show', { message, type})
         }
     },
     

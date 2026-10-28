@@ -49,7 +49,7 @@
     </div>
 </template>
 <script>
-import { authErrorMessages } from '~/services/authErrors';
+import { authErrorMessage } from '~/services/authErrors';
 
 export default {
     name: 'LoginPage',
@@ -104,7 +104,7 @@ export default {
                     type: 'success'
                 })
             } catch (err){
-                this.error = authErrorMessages(err.code)
+                this.error = authErrorMessage(err.code)
             } finally {
                 this.loading = false
             }

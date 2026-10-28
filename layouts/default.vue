@@ -20,7 +20,7 @@ export default {
 <style lang="scss" scoped>
 .app{
     display: flex;
-    height: 100vh;
+    height: 100%;
     background: $color-bg;
     &__sidebar{
         width: $sidebar-width;
@@ -32,8 +32,10 @@ export default {
 
     &__main{
         flex: 1;
-        min-width: 0;        
+        min-width: 0;  
+        min-height: 0;           
         background: $color-bg;
+        overflow: auto;
     }
 }
 </style>

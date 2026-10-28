@@ -38,7 +38,7 @@ export default {
   position: fixed;
   right: $space-5;
   bottom: $space-5;
-  z-index: 300; 
+  z-index: 300;
   display: flex;
   flex-direction: column;
   gap: $space-2;
@@ -50,22 +50,24 @@ export default {
   padding: $space-3 $space-4;
   font-size: $font-sm;
   cursor: pointer;
-  background: $color-surface;
   border: 1px solid $color-border;
   border-left-width: 4px; 
   border-radius: $radius-md;
   box-shadow: $shadow-pop;
 
   &--success {
-    border-left-color: $color-success;
+    background-color: $color-success;
+    color: aliceblue;
   }
 
   &--error {
-    border-left-color: $color-danger;
+    background-color: $color-danger;
+    color: aliceblue;
   }
 
   &--info {
-    border-left-color: $color-info;
+    background-color: $color-info;
+    color: black;
   }
 }
 

@@ -15,7 +15,7 @@
             <!-- Shared task-ийг member нээсэн үед -->
             <div v-if="isEditing && !isOwner" class="drawer__note">
                 <strong>Танд хуваалцсан · Засах боломжтой</strong>
-                <span>{{ task.owner }} энэ task-ийн эзэмшигч бөгөөд таны өөрчлөлт хоёуланд харагдана.</span>
+                <span>{{ task.ownerName }} энэ task-ийн эзэмшигч бөгөөд таны өөрчлөлт хоёуланд харагдана.</span>
             </div>
 
             <!-- Form бөглөх хэсэг -->
@@ -84,13 +84,13 @@
 
                     <ul class="people__list">
                         <li class="people__item">
-                            <UserAvatar :name="task.owner" size="sm" />
-                            <span class="people__name">{{ displayName(task.owner) }}</span>
+                            <UserAvatar :name="task.ownerName" size="sm" />
+                            <span class="people__name">{{ displayName(task.ownerName) }}</span>
                             <span class="people__role">Owner · Editor</span>
                         </li>
-                        <li v-for="person in task.sharedWith" :key="person" class="people__item">
-                            <UserAvatar :name="person" size="sm" />
-                            <span class="people__name">{{ displayName(person) }}</span>
+                        <li v-for="person in task.sharedUsers" :key="person.uid" class="people__item">
+                            <UserAvatar :name="person.name" size="sm" />
+                            <span class="people__name">{{ displayName(person.uid, person.name) }}</span>
                             <span class="people__role">Editor</span>
                         </li>
                     </ul>
@@ -136,7 +136,7 @@ export default{
     props: {
         startStatus: { type: String, default: 'todo' },
         task: { type: Object, default: null },  // null irvel shine task
-        currentUser: { type: String, default: 'Зөнсод' } // test
+        currentUser: { type: String, default: '' } 
     },
 
     data() {
@@ -171,7 +171,7 @@ export default{
         },
         // Tuhain hereglegch task owner mun eseh
         isOwner(){
-            return this.isEditing && this.task.owner === this.currentUser;
+            return this.isEditing && this.task.ownerId === this.userId;
         },
 
         // Гарчиг, огноо хоёулаа бөглөгдсөн үед л үүсгэж болно
@@ -190,8 +190,8 @@ export default{
         this.$emit('save', { ...this.form })
         },
 
-        displayName(name){
-            if(name === this.userName){
+        displayName(uid, name){
+            if(uid === this.currentUserId){
                 return `${name} (та)`
             }
             return name

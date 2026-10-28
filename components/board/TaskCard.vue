@@ -16,8 +16,8 @@
         <!-- footer-shared humuus -->
         <div class="task-card__footer">
             <div class="task-card__avatars">
-                <UserAvatar :name="task.owner" size="sm" />
-                <UserAvatar v-for="person in task.sharedWith" :key="person" :name="person" size="sm" />        
+                <UserAvatar :name="task.ownerName" size="sm" />
+                <UserAvatar v-for="person in task.sharedUsers" :key="person.uid" :name="person.name" size="sm" />        
             </div>
             <UiBadge v-if="isShared">
                 <LinkIcon class="task-card__icon" />
