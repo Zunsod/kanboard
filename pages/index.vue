@@ -42,6 +42,7 @@
 </template>
 
 <script>
+import { auth, db } from '~/services/firebase';
 import BoardColumn from '~/components/board/BoardColumn.vue';
 import BoardToolbar from '~/components/board/BoardToolbar.vue';
 import ConfirmDialogue from '~/components/modal/ConfirmDialogue.vue';
@@ -50,7 +51,7 @@ import TopBar from '~/components/navbar/TopBar.vue';
 export default { 
     name: 'IndexPage',
     components: {TopBar, BoardColumn, TaskModal, ConfirmDialogue, BoardToolbar},
-
+    
     data() {
         return {
             showModal: false,     // modal нээлттэй эсэх
@@ -97,11 +98,15 @@ export default {
             return this.visibleTasks.filter((task)=> task.status === 'todo')
         },
         inProgressTasks() {
-            return this.visibleTasks.filter((task)=> task.status === 'inProgress')
+            return this.visibleTasks.filter((task)=> task.status === 'in-progress')
         },
         doneTasks(){
             return this.visibleTasks.filter((task)=> task.status === 'done')
         }
+    },
+    mounted() {
+        console.log('Firebase project:', db.app.options.projectId)
+        console.log('Нэвтэрсэн хэрэглэгч:', auth.currentUser)
     },
 
     methods:{
@@ -146,7 +151,8 @@ export default {
             this.$store.commit('tasks/DELETE_TASK', this.deletingTask.id)
             this.deletingTask = null
         }
-    }
+    },
+    
 }
 </script>
 

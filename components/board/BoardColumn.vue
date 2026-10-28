@@ -2,10 +2,11 @@
     <section class="column">
         <!-- Bagana title -->
         <header class="column__header">
-            <h2 class="column__title">{{ title }}</h2>
-            <span class="column__count">{{ tasks.length }}</span>
-
-            <button class="column__add" type="button" area-label="Task нэмэх" @click="$emit('add')">
+            <h2 class="column__title">
+                {{ title }}
+                <span class="column__count">{{ tasks.length }}</span>
+            </h2>
+            <button class="column__add" type="button" aria-label="Task нэмэх" @click="$emit('add')">
                 <PlusIcon class="column__add-icon" />
             </button>
         </header>

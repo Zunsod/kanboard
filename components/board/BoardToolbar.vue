@@ -27,8 +27,8 @@
             </label>
             <!-- Erembeleh -->
             <select class="sort" :value="sortBy" @change="$emit('sort', $event.target.value)">
-                <option value="dueDate">Deadline · ойрхон нь эхэнд</option>
-                <option value="priority">Ач холбогдол · өндөр нь эхэнд</option>
+                <option value="dueDate">Deadline · ойрхон эхэнд</option>
+                <option value="priority">Ач холбогдол · өндөр эхэнд</option>
             </select>
 
             <button class="add-btn" type="button" @click="$emit('add')">
