@@ -104,10 +104,6 @@ export default {
             return this.visibleTasks.filter((task)=> task.status === 'done')
         }
     },
-    mounted() {
-        console.log('Firebase project:', db.app.options.projectId)
-        console.log('Нэвтэрсэн хэрэглэгч:', auth.currentUser)
-    },
 
     methods:{
         openModal(status) {

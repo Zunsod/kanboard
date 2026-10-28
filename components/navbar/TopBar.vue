@@ -4,9 +4,11 @@
 
     <div class="topbar__actions">
       <button class="topbar__bell" type="button" aria-label="Мэдэгдэл">
-        <BellIcon />
+        <BellIcon class="topbar__icon"/>
       </button>
-      <UserAvatar name="Zunsod" />
+      <UserAvatar :name="userName" />
+      <span class="topbar__name">{{ userName }}</span>
+      <button class="topbar__logout" type="button" @click="logout">Гарах</button>
     </div>
   </header>
 </template>
@@ -16,7 +18,23 @@ import { BellIcon } from 'vue-tabler-icons'
 import UserAvatar from '../ui/UserAvatar.vue'
 export default {
     name: 'TopBar',
-    components: { UserAvatar, BellIcon }
+    components: { UserAvatar, BellIcon },
+    props: {
+      title: { type: String, required: true }
+    },
+    computed:{
+      userName(){
+        const user = this.$store.state.auth.user
+        if(!user) return ''
+        return user.displayName || user.email
+      }
+    },
+    methods:{
+      async logout(){
+        await this.$store.dispatch('auth/logout')
+        this.$router.push('/login')
+      }
+    }
 }
 </script>
 
@@ -50,6 +68,18 @@ export default {
         &:hover {
             background: $color-hover;
         }
+    }
+    &__name {
+      font-size: $font-sm;
+      font-weight: 500;
+    }
+    &__logout {
+      font-size: $font-sm;
+      color: $color-text-muted;
+
+      &:hover {
+        color: $color-text;
+      }
     }
 }
 </style>
