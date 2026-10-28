@@ -64,6 +64,9 @@ export default {
     background-color: $color-danger;
     color: aliceblue;
   }
+  &--warning {
+    border-left-color: $color-warning;
+  }
 
   &--info {
     background-color: $color-info;

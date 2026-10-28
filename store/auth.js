@@ -49,7 +49,7 @@ export const actions = {
         await updateProfile(result.user, {displayName: name})
         // users collection-d huulna, email r share hiihed hergtei
         await setDoc(doc(db, 'users', result.user.uid),{
-            email, 
+            email: email.trim().toLowerCase(), 
             displayName: name
         })
 

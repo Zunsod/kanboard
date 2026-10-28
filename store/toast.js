@@ -12,13 +12,13 @@ export const mutations = {
 }
 
 export const actions = {
-  show({ commit }, { message, type = 'info' }) {
+  show({ commit }, { message, type = 'info', duration = 3000 }) {
     const id = Date.now() + Math.random()
     commit('ADD', { id, message, type })
 
     // 3 секундийн дараа өөрөө алга болно
     setTimeout(() => {
       commit('REMOVE', id)
-    }, 3000)
+    }, duration)
   }
 }

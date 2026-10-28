@@ -85,21 +85,52 @@
                     <ul class="people__list">
                         <li class="people__item">
                             <UserAvatar :name="task.ownerName" size="sm" />
-                            <span class="people__name">{{ displayName(task.ownerName) }}</span>
+                            <span class="people__name">{{ displayName(task.ownerId, task.ownerName) }}</span>
                             <span class="people__role">Owner · Editor</span>
                         </li>
                         <li v-for="person in task.sharedUsers" :key="person.uid" class="people__item">
                             <UserAvatar :name="person.name" size="sm" />
                             <span class="people__name">{{ displayName(person.uid, person.name) }}</span>
                             <span class="people__role">Editor</span>
+                            <button
+                                v-if="isOwner"
+                                class="people__remove"
+                                type="button"
+                                aria-label="Хамтрагчийг хасах"
+                                @click="unshare(person)"
+                            >
+                                <XIcon class="people__remove-icon" />
+                            </button>
                         </li>
                     </ul>
                 </section>
+                <!-- Share Email oruulah talbar -->
+                <div v-if="isEditing && isOwner && showShareInput" class="share">
+                    <div class="share__row">
+                    <input
+                        v-model="shareEmail"
+                        class="field__input share__input"
+                        type="email"
+                        placeholder="Хуваалцах хүний имэйл"
+                        @input="shareError = ''"
+                        @keydown.enter.prevent="share"
+                    />
+                    <button class="btn btn--primary" type="button" :disabled="sharing" @click="share">
+                        {{ sharing ? 'Нэмж байна...' : 'Нэмэх' }}
+                    </button>
+                    </div>
+                    <span v-if="shareError" class="field__error">{{ shareError }}</span>
+                </div>
 
                 <!-- Share, delete (edit hiih uyd) -->
                 <div v-if="isEditing" class="owner-actions">
                     <div class="owner-actions__item">
-                        <button class="btn btn--ghost" type="button" disabled>
+                        <button 
+                            class="btn btn--ghost" 
+                            type="button" 
+                            :disabled="!isOwner"
+                            @click="showShareInput = !showShareInput"
+                        >
                             Хуваалцах
                         </button>
                         <span class="owner-actions__hint">Owner manages access</span>
@@ -136,7 +167,7 @@ export default{
     props: {
         startStatus: { type: String, default: 'todo' },
         task: { type: Object, default: null },  // null irvel shine task
-        currentUser: { type: String, default: '' } 
+        currentUserId: { type: String, default: '' } 
     },
 
     data() {
@@ -150,7 +181,11 @@ export default{
                 priority: this.task.priority,
                 status: this.task.status
                 },
-                titleTouched: false
+                titleTouched: false,
+                showShareInput: false,
+                shareEmail: '',
+                shareError: '',
+                sharing: false
             }
         }
         // Herev shineer task uusgevel
@@ -160,9 +195,13 @@ export default{
             description: '',
             dueDate: '',
             priority: 'medium',
-            status: this.startStatus
+            status: this.startStatus,
         },
-        titleTouched: false 
+        titleTouched: false ,
+        showShareInput: false,
+        shareEmail: '',
+        shareError: '',
+        sharing: false
         }
     },
     computed: {
@@ -171,7 +210,7 @@ export default{
         },
         // Tuhain hereglegch task owner mun eseh
         isOwner(){
-            return this.isEditing && this.task.ownerId === this.userId;
+            return this.isEditing && this.task.ownerId === this.currentUserId
         },
 
         // Гарчиг, огноо хоёулаа бөглөгдсөн үед л үүсгэж болно
@@ -195,10 +234,37 @@ export default{
                 return `${name} (та)`
             }
             return name
+        },
+        async share(){
+            this.shareError = ''
+            const email = this.shareEmail.trim().toLocaleLowerCase()
+            if(email === ''){
+                this.shareError = 'Имэйл хаяг оруулна уу.'
+                return
+            }
+            this.sharing=true
+            try {
+                await this.$store.dispatch('tasks/shareTask', { task: this.task, email })
+                this.shareEmail = ''
+                this.$store.dispatch('toast/show', {
+                    message: `${email} хэрэглэгчтэй хуваалцлаа`,
+                    type: 'success'
+                })
+            } catch (err){
+                this.shareError = err.message
+            } finally {
+                this.sharing = false
+            }
+        },
+        async unshare(person){
+            await this.$store.dispatch('task/unshareTask', { task: this.task, uid: person.uid })
+            this.$store.dispatch('toast/show',{
+                message: `${person.name}-г хаслаа`,
+                type: 'info'
+            })
         }
     }
 }
-
 </script>
 
 <style lang="scss" scoped>
@@ -347,6 +413,37 @@ export default{
         font-size: $font-xs;
         color: $color-text-muted;
     }
+    &__remove {
+    @include flex-center;
+        width: 24px;
+        height: 24px;
+        color: $color-text-subtle;
+        border-radius: $radius-sm;
+
+        &:hover {
+            color: $color-danger;
+            background: $high-bg;
+        }
+        }
+
+        &__remove-icon {
+            width: 14px;
+            height: 14px;
+    }
+}
+.share {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+
+  &__row {
+    display: flex;
+    gap: $space-2;
+  }
+
+  &__input {
+    flex: 1;
+  }
 }
 
 .owner-actions{

@@ -42,6 +42,7 @@
 
 <script>
 import { type } from 'firebase/firestore/lite/pipelines';
+import { daysUntil } from '~/utils/date';
 import BoardColumn from '~/components/board/BoardColumn.vue';
 import BoardToolbar from '~/components/board/BoardToolbar.vue';
 import ConfirmDialogue from '~/components/modal/ConfirmDialogue.vue';
@@ -55,18 +56,23 @@ export default {
         return {
             showModal: false,     // modal нээлттэй эсэх
             modalStatus: 'todo',   // аль баганаас нээсэн
-            editingTask: null, // засаж буй task (null бол шинэ)
+            editingTaskId: null, // засаж буй task (null бол шинэ)
             deletingTask: null, // устгах гэж буй task (null бол dialog хаалттай)
             activeTab: 'all',
             search: '',
-            sortBy: 'dueDate'
+            sortBy: 'dueDate',
+            remindersShown: false
         }
     },
 
     computed:{
-        userId(){
+        userId() {
             return this.$store.state.auth.user.uid
         },
+        tasksLoaded(){
+            return this.$store.getters['task/isLoaded']
+        },
+        
         visibleTasks(){
             let list = this.$store.getters['tasks/allTasks']
             // Tab
@@ -103,6 +109,20 @@ export default {
         },
         doneTasks(){
             return this.visibleTasks.filter((task)=> task.status === 'done')
+        },
+
+        editingTask(){
+            if (!this.editingTaskId) return null
+            return this.$store.getters['tasks/allTasks'].find((task) => task.id === this.editingTaskId) || null
+        },
+        watch:{
+            // Firestore-oos ugugdul irmegts reminder haruulna
+            tasksLoaded(loaded){
+                if(loaded && !this.remindersShown){
+                    this.remindersShown =true
+                    this.showReminders()
+                }
+            }
         }
     },
     // Board neegdehed firestore-iig sonsoj ehelne
@@ -116,19 +136,19 @@ export default {
 
     methods:{
         openModal(status) {
-            this.editingTask = null
+            this.editingTaskId = null
             this.modalStatus = status
             this.showModal = true
         },
         // card harah, zasah
         openEdit(task) {
-            this.editingTask = task
+            this.editingTaskId = task.id
             this.showModal = true
         },
 
         closeModal() {
             this.showModal = false
-            this.editingTask = null
+            this.editingTaskId = null
         },
 
         async saveTask(formData) {
@@ -169,7 +189,59 @@ export default {
         },
         showToast(message){
             this.$store.dispatch('toast/show', { message, type})
-        }
+        },
+        showReminders(){
+            const messages = []
+            // Hugatsaani medegdel
+            this.$store.getters['tasks/allTasks'].forEach((task) => {
+                if (task.status === 'done') return // done bolsniig algasna
+
+                const days = daysUntil(task.dueDate)
+                if (days < 0) {
+                messages.push({ message: `Хугацаа ${-days} хоног хэтэрсэн: ${task.title}`, type: 'error' })
+                } else if (days === 0) {
+                messages.push({ message: `Өнөөдөр дуусна: ${task.title}`, type: 'warning' })
+                } else if (days === 1) {
+                messages.push({ message: `Маргааш дуусна: ${task.title}`, type: 'info' })
+                }
+            })
+            // Shineer huvaaltssan task uud
+            const sharedTasks = this.$store.state.tasks.shared
+            const seenIds = this.loadSeenIds()
+            sharedTasks.forEach((task) => {
+                if (!seenIds.includes(task.id)) {
+                    messages.push({
+                        message: `${task.ownerName} танд "${task.title}" task хуваалцлаа`,
+                        type: 'success'
+                    })
+                }
+            })
+            // odoo baigaa huvaaltssan task uudig seen gej temdeglene
+            this.saveSeenIds(sharedTasks.map((task) => task.id))
+
+            // ehnii 5 notif haruulna
+            messages.slice(0, 5).forEach((item) => {
+                this.$store.dispatch('toast/show', { ...item, duration: 6000 })
+            })
+            if (messages.length > 5) {
+                this.$store.dispatch('toast/show', {
+                message: `Өөр ${messages.length - 5} мэдэгдэл байна`,
+                type: 'info',
+                duration: 6000
+                })
+            }
+            },
+            // user burt uur tulhuur
+            seenKey() {
+                return `kanboard-seen-shared-${this.userId}`
+            },
+            loadSeenIds() {
+                try {
+                    return JSON.parse(localStorage.getItem(this.seenKey())) || []
+                } catch (err) {
+                    return []
+                }
+            },
     },
     
 }

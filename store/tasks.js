@@ -3,11 +3,14 @@ import {
   query,
   where,
   onSnapshot,
+  getDocs,
   addDoc,
   updateDoc,
   deleteDoc,
   doc,
-  serverTimestamp
+  serverTimestamp,
+  arrayUnion,
+  arrayRemove
 } from 'firebase/firestore'
 import { db } from '~/services/firebase'
 
@@ -18,29 +21,34 @@ let stopShared = null
 export const state = () => ({
   owned: [],  // миний эзэмшдэг tasks
   shared: [], // надтай хуваалцсан tasks
-  loading: true
+  ownedLoaded: false, 
+  sharedLoaded: false  
 })
 
 // Tootsooolson utguud
 export const getters = {
   allTasks(state) {
     return [...state.owned, ...state.shared]
+  },
+  isLoaded(state) {
+    return state.ownedLoaded && state.sharedLoaded
   }
 }
 // State uurchluh
 export const mutations = {
   SET_OWNED(state, tasks){
     state.owned = tasks
+    state.ownedLoaded = true
   },
   SET_SHARED(state, tasks){
     state.shared = tasks
-  },
-  SET_LOADING(state, value){
-    state.loading = value
+    state.sharedLoaded = true
   },
   CLEAR(state){
     state.owned =[]
     state.shared =[]
+    state.ownedLoaded = false
+    state.sharedLoaded = false
   }
 }
 
@@ -62,10 +70,7 @@ export const actions = {
     // Minii ezemshdeg 
     stopOwned = onSnapshot(
       ownedQuery,
-      (snapshot) => {
-        commit('SET_OWNED', toTasks(snapshot))
-        commit('SET_LOADING', false)
-      },
+      (snapshot) => commit('SET_OWNED', toTasks(snapshot)),
       (err) => console.error('Owned tasks:', err)
     )
     // Nadtai huvaaltssan
@@ -100,5 +105,39 @@ export const actions = {
   },
   async deleteTask(context, id){
     await deleteDoc(doc(db, 'tasks', id))
+  },
+  async shareTask({rootState}, {task, email} ){
+    const me = rootState.auth.user
+    // uurtegu huvaaltsah bolomjgui
+    if(email === me.email.toLowerCase()){
+      throw new Error('Өөртэйгөө хуваалцах боломжгүй.')
+    }
+    // users collection-s emaileer haina
+    const usersQuery = query(collection(db, 'users'), where('email', '==', email))
+    const snapshot = await getDocs(usersQuery)
+    if(snapshot.empty){
+      throw new Error('Энэ имэйлтэй хэрэглэгч олдсонгүй.')
+    }
+
+    const userDoc = snapshot.docs[0]
+    const uid = userDoc.id
+    const name = userDoc.data().displayName || email
+
+    // ali hediin shared
+    if(task.sharedWith.includes(uid)){
+      throw new Error('Энэ хэрэглэгчтэй аль хэдийн хуваалцсан байна.')
+    }
+
+    // task-d nemeh
+    await updateDoc(doc(db, 'tasks', task.id), {
+      sharedWith: arrayUnion(uid),
+      sharedUsers: arrayUnion({uid, name})
+    })
+  },
+  async unshareTask(context, {task, uid}){
+    await updateDoc(doc(db, 'tasks', task.id), {
+      sharedWith: arrayRemove(uid),
+      sharedUsers: task.sharedUsers.filter((person)=> person.uid !== uid)
+    })
   }
 }
