@@ -42,7 +42,6 @@
 
 <script>
 import { type } from 'firebase/firestore/lite/pipelines';
-import { daysUntil } from '~/utils/date';
 import BoardColumn from '~/components/board/BoardColumn.vue';
 import BoardToolbar from '~/components/board/BoardToolbar.vue';
 import ConfirmDialogue from '~/components/modal/ConfirmDialogue.vue';
@@ -115,24 +114,30 @@ export default {
             if (!this.editingTaskId) return null
             return this.$store.getters['tasks/allTasks'].find((task) => task.id === this.editingTaskId) || null
         },
-        watch:{
-            // Firestore-oos ugugdul irmegts reminder haruulna
-            tasksLoaded(loaded){
-                if(loaded && !this.remindersShown){
-                    this.remindersShown =true
-                    this.showReminders()
-                }
-            }
+        
+    },
+    watch: {
+    tasksLoaded: {
+        immediate: true, 
+        handler(loaded) {
+        if (loaded && !this.remindersShown) {
+            this.remindersShown = true
+            this.showReminders()
         }
+        }
+    }
     },
     // Board neegdehed firestore-iig sonsoj ehelne
     mounted(){
         this.$store.dispatch('tasks/subscribe')
     },
+        
+
     // board-s garahad sonsohoo bolino
     beforeDestroy(){
         this.$store.dispatch('tasks/unsubscribe')
     },
+    
 
     methods:{
         openModal(status) {
@@ -191,20 +196,9 @@ export default {
             this.$store.dispatch('toast/show', { message, type})
         },
         showReminders(){
-            const messages = []
             // Hugatsaani medegdel
-            this.$store.getters['tasks/allTasks'].forEach((task) => {
-                if (task.status === 'done') return // done bolsniig algasna
-
-                const days = daysUntil(task.dueDate)
-                if (days < 0) {
-                messages.push({ message: `Хугацаа ${-days} хоног хэтэрсэн: ${task.title}`, type: 'error' })
-                } else if (days === 0) {
-                messages.push({ message: `Өнөөдөр дуусна: ${task.title}`, type: 'warning' })
-                } else if (days === 1) {
-                messages.push({ message: `Маргааш дуусна: ${task.title}`, type: 'info' })
-                }
-            })
+            const messages = [...this.$store.getters['tasks/reminders']]
+            
             // Shineer huvaaltssan task uud
             const sharedTasks = this.$store.state.tasks.shared
             const seenIds = this.loadSeenIds()
@@ -243,6 +237,7 @@ export default {
                 }
             },
     },
+
     
 }
 </script>

@@ -37,7 +37,7 @@ export default {
 .toasts {
   position: fixed;
   right: $space-5;
-  bottom: $space-5;
+  top: $space-5;
   z-index: 300;
   display: flex;
   flex-direction: column;

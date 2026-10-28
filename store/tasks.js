@@ -13,7 +13,7 @@ import {
   arrayRemove
 } from 'firebase/firestore'
 import { db } from '~/services/firebase'
-
+import { daysUntil } from '~/utils/date'
 let stopOwned = null
 let stopShared = null
 
@@ -32,6 +32,29 @@ export const getters = {
   },
   isLoaded(state) {
     return state.ownedLoaded && state.sharedLoaded
+  },
+  // Хугацаа хэтэрсэн, өнөөдөр, маргааш дуусах task-ууд (хонх + toast хоёуланд)
+  reminders(state, getters) {
+    const list = []
+
+    // Огноогоор эрэмбэлэхэд хэтэрсэн нь эхэнд гарна
+    const sorted = [...getters.allTasks].sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+
+    sorted.forEach((task) => {
+      if (task.status === 'done') return
+
+      const days = daysUntil(task.dueDate)
+
+      if (days < 0) {
+        list.push({ id: task.id, message: `Хугацаа ${-days} хоног хэтэрсэн: ${task.title}`, type: 'error' })
+      } else if (days === 0) {
+        list.push({ id: task.id, message: `Өнөөдөр дуусна: ${task.title}`, type: 'warning' })
+      } else if (days === 1) {
+        list.push({ id: task.id, message: `Маргааш дуусна: ${task.title}`, type: 'info' })
+      }
+    })
+
+    return list
   }
 }
 // State uurchluh
@@ -91,7 +114,7 @@ export const actions = {
   },
   async addTask({rootState}, form){
     const user = rootState.auth.user
-    await addDoc(collection(db, 'tasks'), {
+    const ref = await addDoc(collection(db, 'tasks'), {
       ...form,
       ownerId: user.uid,
       ownerName: user.displayName || user.email,
@@ -99,6 +122,7 @@ export const actions = {
       sharedUsers: [],
       createdAt: serverTimestamp()
     })
+    return ref.id
   },
   async updateTask(context, {id, ...changes}){
     await updateDoc(doc(db, 'tasks', id), changes)
