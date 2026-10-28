@@ -16,13 +16,17 @@ import { db } from '~/services/firebase'
 import { daysUntil } from '~/utils/date'
 let stopOwned = null
 let stopShared = null
-
+// localStorage-ийн түлхүүр (хэрэглэгч бүрт тусдаа)
+function seenKey(uid) {
+  return `kanboard-seen-shared-${uid}`
+}
 
 export const state = () => ({
   owned: [],  // миний эзэмшдэг tasks
   shared: [], // надтай хуваалцсан tasks
-  ownedLoaded: false, 
-  sharedLoaded: false  
+  ownedLoaded: false,
+  sharedLoaded: false,
+  seenSharedIds: []
 })
 
 // Tootsooolson utguud
@@ -55,6 +59,18 @@ export const getters = {
     })
 
     return list
+  },
+  newShared(state) {
+    return state.shared.filter((task) => !state.seenSharedIds.includes(task.id))
+  },
+  notifications(state, getters) {
+    const sharedItems = getters.newShared.map((task) => ({
+      id: `shared-${task.id}`,
+      message: `${task.ownerName} танд "${task.title}" task хуваалцлаа`,
+      type: 'success'
+    }))
+
+    return [...sharedItems, ...getters.reminders]
   }
 }
 // State uurchluh
@@ -67,11 +83,15 @@ export const mutations = {
     state.shared = tasks
     state.sharedLoaded = true
   },
+  SET_SEEN(state, ids){
+    state.seenSharedIds = ids
+  },
   CLEAR(state){
     state.owned =[]
     state.shared =[]
     state.ownedLoaded = false
     state.sharedLoaded = false
+    state.seenSharedIds = []
   }
 }
 
@@ -84,6 +104,7 @@ export const actions = {
   // Firestore-ийг сонсож эхлэх (board нээгдэхэд)
   subscribe({ commit, dispatch, rootState }) {
     dispatch('unsubscribe')
+    dispatch('loadSeen')
 
     const uid = rootState.auth.user.uid
     const tasksRef = collection(db, 'tasks')
@@ -112,6 +133,26 @@ export const actions = {
     stopShared = null
     commit('CLEAR')
   },
+  loadSeen({ commit, rootState }) {
+    try {
+      const saved = localStorage.getItem(seenKey(rootState.auth.user.uid))
+      commit('SET_SEEN', JSON.parse(saved) || [])
+    } catch (err) {
+      commit('SET_SEEN', [])
+    }
+  },
+  markSharedSeen({ state, commit, rootState }) {
+    const ids = state.shared.map((task) => task.id)
+    commit('SET_SEEN', ids)
+
+    try {
+      localStorage.setItem(seenKey(rootState.auth.user.uid), JSON.stringify(ids))
+    } catch (err) {
+      // localStorage хориглогдсон бол алгасна
+    }
+  },
+
+
   async addTask({rootState}, form){
     const user = rootState.auth.user
     const ref = await addDoc(collection(db, 'tasks'), {

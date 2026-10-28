@@ -69,7 +69,7 @@ export default {
             return this.$store.state.auth.user.uid
         },
         tasksLoaded(){
-            return this.$store.getters['task/isLoaded']
+            return this.$store.getters['tasks/isLoaded']
         },
         
         visibleTasks(){
@@ -127,10 +127,12 @@ export default {
         }
     }
     },
+    
     // Board neegdehed firestore-iig sonsoj ehelne
     mounted(){
         this.$store.dispatch('tasks/subscribe')
     },
+    
         
 
     // board-s garahad sonsohoo bolino
@@ -195,47 +197,21 @@ export default {
         showToast(message){
             this.$store.dispatch('toast/show', { message, type})
         },
-        showReminders(){
-            // Hugatsaani medegdel
-            const messages = [...this.$store.getters['tasks/reminders']]
-            
-            // Shineer huvaaltssan task uud
-            const sharedTasks = this.$store.state.tasks.shared
-            const seenIds = this.loadSeenIds()
-            sharedTasks.forEach((task) => {
-                if (!seenIds.includes(task.id)) {
-                    messages.push({
-                        message: `${task.ownerName} танд "${task.title}" task хуваалцлаа`,
-                        type: 'success'
-                    })
-                }
-            })
-            // odoo baigaa huvaaltssan task uudig seen gej temdeglene
-            this.saveSeenIds(sharedTasks.map((task) => task.id))
+        showReminders() {
+            const messages = this.$store.getters['tasks/notifications']
 
-            // ehnii 5 notif haruulna
             messages.slice(0, 5).forEach((item) => {
-                this.$store.dispatch('toast/show', { ...item, duration: 6000 })
+                this.$store.dispatch('toast/show', { message: item.message, type: item.type, duration: 6000 })
             })
+
             if (messages.length > 5) {
                 this.$store.dispatch('toast/show', {
-                message: `Өөр ${messages.length - 5} мэдэгдэл байна`,
+                message: `Өөр ${messages.length - 5} мэдэгдэл байна. Хонхыг шалгана уу.`,
                 type: 'info',
                 duration: 6000
                 })
             }
-            },
-            // user burt uur tulhuur
-            seenKey() {
-                return `kanboard-seen-shared-${this.userId}`
-            },
-            loadSeenIds() {
-                try {
-                    return JSON.parse(localStorage.getItem(this.seenKey())) || []
-                } catch (err) {
-                    return []
-                }
-            },
+        },
     },
 
     

@@ -49,6 +49,7 @@ export default {
   max-width: 360px;
   padding: $space-3 $space-4;
   font-size: $font-sm;
+  color: #fff;
   cursor: pointer;
   border: 1px solid $color-border;
   border-left-width: 4px; 
@@ -56,21 +57,18 @@ export default {
   box-shadow: $shadow-pop;
 
   &--success {
-    background-color: $color-success;
-    color: aliceblue;
+    background: $color-success;
   }
 
   &--error {
-    background-color: $color-danger;
-    color: aliceblue;
+    background: $color-danger;
   }
   &--warning {
-    border-left-color: $color-warning;
+    background: #d98a00;
   }
 
   &--info {
-    background-color: $color-info;
-    color: black;
+    background: $color-info;
   }
 }
 
